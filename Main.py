@@ -1,16 +1,24 @@
-from fastapi import FastAPI, Request
+
+# Main.py
+import os
 import requests
+from fastapi import FastAPI
+from apscheduler.schedulers.background import BackgroundScheduler
+from signals import analyze_market_and_generate_signal
 
 app = FastAPI()
 
-# आपकी जानकारी (Telegram Bot Token और Chat ID)
-TELEGRAM_BOT_TOKEN = "9057258890:AAG6RdS_7Sr_3cpPrvGbd1SrHsTylFkjWI8"
-CHAT_ID = "5999494758"
+# टेलीग्राम क्रेडेंशियल्स जो आपने Render पर सेट किए हैं
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-def send_telegram_message(message: str):
+def send_telegram_alert(message: str):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("Telegram credentials missing!")
+        return
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
-        "chat_id": CHAT_ID,
+        "chat_id": TELEGRAM_CHAT_ID,
         "text": message,
         "parse_mode": "Markdown"
     }
@@ -18,28 +26,24 @@ def send_telegram_message(message: str):
         response = requests.post(url, json=payload)
         return response.json()
     except Exception as e:
-        return {"error": str(e)}
+        print(f"Error sending telegram message: {e}")
+
+# बैकग्राउंड जॉब जो हर 4 घंटे में ऑटोमैटिक सिग्नल भेजेगी
+def scheduled_signal_job():
+    signal_text = analyze_market_and_generate_signal()
+    send_telegram_alert(signal_text)
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(scheduled_signal_job, 'interval', hours=4)
+scheduler.start()
 
 @app.get("/")
 def home():
-    return {"status": "Vikram News Bot is running 24/7!"}
+    return {"status": "Vikram Smart S/R Signal Bot is Live & Running smoothly!"}
 
-@app.post("/webhook")
-async def receive_news(request: Request):
-    data = await request.json()
-    
-    asset = data.get("asset", "US100 / Gold / Oil")
-    news_title = data.get("title", "Breaking Market News")
-    impact = data.get("impact", "High Volatility Expected")
-    signal = data.get("signal", "Watch Support/Resistance Levels")
-    
-    message = (
-        f"🚨 *TRADING ALERT: {asset}* 🚨\n\n"
-        f"📰 *News:* {news_title}\n"
-        f"⚡ *Impact:* {impact}\n"
-        f"📊 *Action:* {signal}\n\n"
-        f"_Generated via Vikratna Bot_"
-    )
-    
-    send_telegram_message(message)
-    return {"status": "Alert sent successfully to Vikram!"}
+@app.get("/trigger-signal")
+def manual_trigger():
+    """इस लिंक को ब्राउज़र में खोलकर आप तुरंत एक टेस्ट सिग्नल मंगा सकते हैं"""
+    signal_text = analyze_market_and_generate_signal()
+    send_telegram_alert(signal_text)
+    return {"message": "Manual S/R Rejection Signal sent to Telegram successfully!"}
