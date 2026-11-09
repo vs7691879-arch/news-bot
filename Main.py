@@ -87,7 +87,20 @@ def monitor_market():
             
         time.sleep(60)
 
-if __name__ == "__main__":
+if __name__ == "__main__":send_test_message()
     monitor_market()
+    
+def send_test_message():
+    token = "905725890:AAG6RdS_7Sr..." 
+    chat_id = "5999494758"
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": "🚀 Vikram, Trading Bot Test Message: Connection is 100% Working!"}
+    try:
+        response = requests.post(url, json=payload)
+        print("Test Response:", response.text)
+    except Exception as e:
+        print("Error sending test message:", e)
+
+
 
 
