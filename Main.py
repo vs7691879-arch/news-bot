@@ -87,7 +87,8 @@ def monitor_market():
             
         time.sleep(60)
 
-if __name__ == "__main__":send_test_message()
+if __name__ == "__main__":
+    send_test_message()
     monitor_market()
     
 def send_test_message():
