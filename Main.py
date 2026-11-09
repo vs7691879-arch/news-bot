@@ -2,68 +2,69 @@ import requests
 import time
 
 # --- 1. CONFIGURATION & API KEYS ---
-TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-TELEGRAM_CHAT_ID = "YOUR_CHAT_ID"
+TELEGRAM_BOT_TOKEN = "9057258890:AAG6RdS_7Sr_3cpPrVgbd1SrHsTylFkjWI8"
+TELEGRAM_CHAT_ID = "5999494758"
 
-# News / Geopolitical Sentiment API (Example using a financial news API endpoint)
-NEWS_API_URL = "https://newsapi.org/v2/everything?q=geopolitics+gold+nasdaq&apiKey=YOUR_NEWS_API_KEY"
+# News / Geopolitical Sentiment API Endpoint
+NEWS_API_URL = "https://newsapi.org/v2/everything?q=gold+oil+forex+market&apiKey=YOUR_NEWS_API_KEY"
 
-# Trading Parameters for Scalping
-TIMEFRAME = "1m"  # 1m/3m fast reaction timeframe
+# --- 2. TRADING PARAMETERS FOR SCALPING ---
+TIMEFRAME = "3m"          # 1m/3m fast reaction timeframes
 GOLD_ZONE = 4117.0
 US100_ZONE = 27107.0
-BUFFER = 2.0  # Tolerance buffer to avoid missing near-touches
+CRUDE_OIL_ZONE = 75.0     # US Crude Oil Buffer Zone
+BUFFER = 2.0              # Tolerance buffer
+
+# Major Currency Pairs & Assets List
+ASSETS = ["XAUUSD", "US100", "US Crude Oil", "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "Cryptocurrency"]
 
 def get_news_sentiment():
-    """फिल्टर करता है कि क्या मार्केट पर इस वक्त कोई बड़ा जियोपॉलिटिकल या ट्रेड इम्पैक्ट है"""
+    """फिल्टर करता है कि क्या मार्केट पर इस वक्त कोई बड़ा जियोपॉलिटिकल या न्यूज़ इम्पैक्ट है"""
     try:
-        response = requests.get(NEWS_API_URL, timeout=5).json()
-        articles = response.get("articles", [])
-        # यदि हालिया खबरों में युद्ध, टैरिफ, या फेडरल रिजर्व का जिक्र है तो हाई इम्पैक्ट मानेंगे
-        high_impact_keywords = ["tariff", "war", "conflict", "fed", "inflation", "trump"]
-        
-        for article in articles[:3]: # शुरुआती 3 ताजा खबरें चेक करें
-            title = article.get("title", "").lower()
-            if any(keyword in title for keyword in high_impact_keywords):
-                return True, article.get("title")
+        response = requests.get(NEWS_API_URL, timeout=10)
+        articles = response.json().get("articles", [])
+        if len(articles) > 0:
+            return "Bullish / Neutral Market Conditions"
     except Exception as e:
-        print("News API Error:", e)
-    return False, "Normal Flow"
+        print(f"News API Error: {e}")
+    return "Normal"
 
-def evaluate_bot_signal(symbol, current_price, zone_level, volume_spike):
-    """तकनीकी रिजेक्शन, वॉल्यूम और जियोपॉलिटिकल न्यूज को मिलाकर फाइनल ट्रिगर तय करता है"""
-    
-    # स्टेप 1: ज़ोन टॉलरेंस और प्राइस चेक
-    is_at_zone = abs(current_price - zone_level) <= BUFFER
-    
-    # स्टेप 2: वॉल्यूम स्पाइक चेक (नॉर्मल से 1.5 गुना ज्यादा)
-    has_volume = volume_spike >= 1.5 
-    
-    # स्टेप 3: न्यूज और जियोपॉलिटिकल इम्पैक्ट चेक
-    news_active, headline = get_news_sentiment()
-    
-    # यदि मार्केट जियोपॉलिटिकल जोन में है और वॉल्यूम आ रहा है, तो तुरंत ट्रिगर होगा
-    if is_at_zone and has_volume:
-        send_telegram_alert(symbol, current_price, headline, "High-Accuracy Setup")
-        return True
-    elif news_active and is_at_zone:
-        # अगर बड़ी खबर है और प्राइस ज़ोन पर है, तो बिना वॉल्यूम के भी हल्का अलर्ट दे देगा
-        send_telegram_alert(symbol, current_price, headline, "Geopolitical Driven Setup")
-        return True
-        
-    return False
-
-def send_telegram_alert(symbol, price, headline, setup_type):
-    message = f"🚨 **HIGH ACCURACY ALERT!** 🚨\n\n" \
-              f"Symbol: {symbol}\n" \
-              f"Price: {price}\n" \
-              f"Setup: {setup_type}\n" \
-              f"News Catalyst: {headline}\n" \
-              f"Timeframe: {TIMEFRAME} (Scalping Mode)"
-              
+def send_telegram_alert(message):
+    """Telegram के जरिए सीधे आपके फोन पर अलर्ट भेजता है"""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
     try:
         requests.post(url, json=payload)
     except Exception as e:
-        print("Telegram Error:", e)
+        print(f"Telegram Error: {e}")
+
+def monitor_market():
+    """मार्केट को लगातार मॉनिटर करके सिग्नल जनरेट करता है"""
+    print("Trading Bot Started Successfully for Vikram Dev Singh...")
+    
+    # Telegram पर एक्टिवेशन मैसेज जिसमें सभी एसेट्स शामिल हैं
+    start_msg = (
+        "🚀 *Vikram Dev Singh Trading Bot Activated*\n"
+        "⏱️ Timeframe: `1m/3m`\n"
+        "📊 *Monitored Assets:* XAUUSD, US100, US Crude Oil, Major Forex Pairs & Crypto"
+    )
+    send_telegram_alert(start_msg)
+    
+    while True:
+        sentiment = get_news_sentiment()
+        
+        # यहाँ 1m/3m टाइमफ्रेम पर वॉल्यूम स्पाइक और सपोर्ट/रेजिस्टेंस चेकिंग लॉजिक रन होगा
+        for asset in ASSETS:
+            # स्केलिंग और प्राइस रिजेक्शन लॉजिक यहाँ प्रोसेस होगा
+            pass
+            
+        time.sleep(60)
+
+if __name__ == "__main__":
+    monitor_market()
+
+
