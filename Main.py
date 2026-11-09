@@ -51,9 +51,11 @@ def monitor_market():
             print("Error in market monitoring loop:", e)
             
         time.sleep(180) # हर 3 मिनट पर नया कैंडल क्लोज होने पर स्कैन करेगा
-
 if __name__ == "__main__":
+    send_telegram_alert("🚀 Vikram, MT5 Trading Bot is connected successfully!")
     monitor_market()
+
+
 
 
 
