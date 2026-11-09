@@ -1,6 +1,29 @@
-import requests
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
 import time
+import requests
 
+# Render के लिए डमी वेब सर्वर ताकि पोर्ट एरर न आए
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Trading Bot is Live!")
+
+def run_server():
+    server_address = ('0.0.0.0', 10000)
+    httpd = HTTPServer(server_address, SimpleHandler)
+    httpd.serve_forever()
+
+# सर्वर को बैकग्राउंड में चलाने के लिए
+threading.Thread(target=run_server, daemon=True).start()
+
+# --- यहाँ से आपका असली ट्रेडिंग बॉट और सिग्नल लॉजिक शुरू होता है ---
+print("Trading bot and web server started successfully...")
+
+while True:
+    # आपके ट्रेडिंग और न्यूज-सेंटीमेंट एनालिसिस का लूप
+    time.sleep(1)
 # --- 1. CONFIGURATION & API KEYS ---
 TELEGRAM_BOT_TOKEN = "9057258890:AAG6RdS_7Sr_3cpPrVgbd1SrHsTylFkjWI8"
 TELEGRAM_CHAT_ID = "5999494758"
