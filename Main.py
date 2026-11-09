@@ -23,8 +23,8 @@ server_thread.start()
 ASSETS = ["XAUUSD", "US100", "US Crude", "Forex", "Crypto"]
 
 def send_telegram_alert(message):
-    token = "905725890:AAG6RdS_7Sr..." 
-    chat_id = "5999494758"
+        token = "9057258890:AAG6RdS_7Sr_3cpPrvGbd1SrHsTylFkjWI8"
+      chat_id = "5999494758"
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {"chat_id": chat_id, "text": message}
     try:
